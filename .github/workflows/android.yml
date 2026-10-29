@@ -13,7 +13,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # Upgraded to version 9.3.1 to match your code requirements
+      # Automatically creates a dummy debug keystore file at the root path expected by your project
+      - name: Generate Dummy Keystore
+        run: |
+          keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+
       - name: Build with Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
