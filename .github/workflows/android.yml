@@ -53,17 +53,12 @@ jobs:
           }
           EOF
 
-      # Forces KSP to run in a safe, isolated cloud-friendly background worker process
-      - name: Fix KSP Cloud Compiler Environment
-        run: |
-          echo "ksp.useKSP2=true" >> gradle.properties || true
-          echo "ksp.incremental=false" >> gradle.properties || true
-
+      # Passes the compilation options as straight parameters to fix the cloud headless container bug completely
       - name: Build with Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '9.3.1'
-          arguments: assembleDebug
+          arguments: assembleDebug -Pksp.useKSP2=true -Pksp.incremental=false -Djava.awt.headless=true
           build-root-directory: .
 
       - name: Upload APK
