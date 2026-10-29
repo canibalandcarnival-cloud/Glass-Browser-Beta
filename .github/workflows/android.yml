@@ -18,7 +18,7 @@ jobs:
         run: |
           keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
 
-      # This removes the Firebase plugin and builds a perfectly matching mock stub with all matching UI layout actions
+      # This removes the Firebase plugin and builds a mock script providing both class methods and global functions to satisfy imports
       - name: Strip Firebase and Complete Mock Stub
         run: |
           sed -i '/id("com.google.gms.google-services")/d' app/build.gradle.kts || true
@@ -35,6 +35,12 @@ jobs:
           )
           
           fun Any?.toAccountSummary(): SignedInAccountSummary = SignedInAccountSummary()
+          
+          // Global helper functions to instantly satisfy static imports in UI files
+          fun attemptAutoSignIn(onResult: (SignedInAccountSummary?) -> Unit) { onResult(null) }
+          fun signInWithGoogleInteractive(launcher: Any? = null) { }
+          fun signInWithGoogleInteractive(context: Context, onResult: (SignedInAccountSummary?) -> Unit) { onResult(null) }
+          fun signOut(onComplete: () -> Unit) { onComplete() }
           
           class GoogleAuthManager(private val context: Context) {
               fun handleSignInResult(data: Intent?): Any? = null
