@@ -18,7 +18,7 @@ jobs:
         run: |
           keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
 
-      # This removes the Firebase plugin and injects a robust mock file containing all required data signatures
+      # This strips Firebase and injects the proper account models
       - name: Strip Firebase and Complete Mock Stub
         run: |
           sed -i '/id("com.google.gms.google-services")/d' app/build.gradle.kts || true
@@ -44,6 +44,12 @@ jobs:
               fun signInWithGoogleInteractive(launcher: Any) { }
           }
           EOF
+
+      # This forces KSP to run in a safe, isolated background worker so it doesn't crash on the cloud server
+      - name: Fix KSP Cloud Compiler Environment
+        run: |
+          echo "ksp.useKSP2=true" >> gradle.properties || true
+          echo "ksp.incremental=false" >> gradle.properties || true
 
       - name: Build with Gradle
         uses: gradle/actions/setup-gradle@v3
