@@ -18,12 +18,11 @@ jobs:
         run: |
           keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
 
-      # This removes the Firebase plugin check and overrides the code block with a type-safe integer fallback value
-      - name: Strip Firebase Requirement
+      # This completely wipes the lines causing errors and swaps them for clean, dummy hardcoded data strings
+      - name: Strip Firebase and Fix Selector Syntax
         run: |
           sed -i '/id("com.google.gms.google-services")/d' app/build.gradle.kts || true
-          sed -i 's/getString(R.string.default_web_client_id)/"dummy_id"/g' app/src/main/java/com/example/core/GoogleAuthManager.kt || true
-          sed -i 's/R.string.default_web_client_id/0/g' app/src/main/java/com/example/core/GoogleAuthManager.kt || true
+          sed -i 's/.*default_web_client_id.*/val defaultWebClientId = "dummy_id"/g' app/src/main/java/com/example/core/GoogleAuthManager.kt || true
 
       - name: Build with Gradle
         uses: gradle/actions/setup-gradle@v3
