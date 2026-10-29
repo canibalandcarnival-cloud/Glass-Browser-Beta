@@ -13,11 +13,11 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # This version forces a specific Gradle version so it doesn't look for the missing gradlew script
+      # Upgraded to version 9.3.1 to match your code requirements
       - name: Build with Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
-          gradle-version: '8.5'
+          gradle-version: '9.3.1'
           arguments: assembleDebug
           build-root-directory: .
 
