@@ -64,12 +64,19 @@ jobs:
           @Composable fun AccountAuthGlassSheet(onDismiss: () -> Unit) {}
           EOF
 
-      # Executes compilation with maximum memory flags allocated to prevent KSP container exceptions
+      # Configures memory limits cleanly via properties to safely bypass the KSP processing crash
+      - name: Configure Build Memory Options
+        run: |
+          echo "org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1024m" >> gradle.properties
+          echo "ksp.useKSP2=true" >> gradle.properties
+          echo "ksp.incremental=false" >> gradle.properties
+
+      # Executes compilation smoothly using the isolated memory configuration
       - name: Build with Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '9.3.1'
-          arguments: clean assembleDebug -Pksp.useKSP2=true -Pksp.incremental=false -Djava.awt.headless=true --no-daemon -Dorg.gradle.jvmargs="-Xmx4g -XX:MaxMetaspaceSize=1g"
+          arguments: assembleDebug -Djava.awt.headless=true
           build-root-directory: .
 
       - name: Upload APK
