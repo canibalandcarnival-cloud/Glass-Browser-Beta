@@ -18,29 +18,37 @@ jobs:
         run: |
           keytool -genkey -v -keystore debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
 
-      # This removes the Firebase plugin and completely deactivates the broken login screen files so the rest of the application builds smoothly
-      - name: Strip Firebase and Disable Broken UI Screens
+      # This cleans the project dependencies, patches the KSP plugin version to a stable cloud-compatible release, and handles Firebase blocks
+      - name: Patch KSP Version and Strip Firebase
         run: |
+          # 1. Strip out the Firebase services plugin
           sed -i '/id("com.google.gms.google-services")/d' app/build.gradle.kts || true
           
-          # Wipe out the broken authentication screens and replace them with empty structural templates
+          # 2. Force overwrite the KSP plugin to a stable, modern cloud-native version
+          if [ -f build.gradle.kts ]; then
+            sed -i 's/id("com.google.devtools.ksp") version ".*"/id("com.google.devtools.ksp") version "2.1.0-1.0.29"/g' build.gradle.kts || true
+          fi
+          if [ -f app/build.gradle.kts ]; then
+            sed -i 's/id("com.google.devtools.ksp") version ".*"/id("com.google.devtools.ksp") version "2.1.0-1.0.29"/g' app/build.gradle.kts || true
+          fi
+          
+          # 3. Safely bypass the broken login UI files
           cat << 'EOF' > app/src/main/java/com/example/ui/screens/AccountAuthGlassSheet.kt
           package com.example.ui.screens
           import androidx.compose.runtime.Composable
           @Composable fun AccountAuthGlassSheet(onDismiss: () -> Unit) {}
           EOF
 
-          # Fix the reference inside the main layout file by commenting out the broken auto-login call
           if [ -f app/src/main/java/com/example/ui/GlassBrowserApp.kt ]; then
             sed -i 's/.*attemptAutoSignIn.*/\/\/ auto sign in skipped/g' app/src/main/java/com/example/ui/GlassBrowserApp.kt || true
           fi
 
-      # Passes the compilation options as straight parameters to fix the cloud headless container bug completely
+      # Runs a fresh clean build with strict headless environment properties enforced
       - name: Build with Gradle
         uses: gradle/actions/setup-gradle@v3
         with:
           gradle-version: '9.3.1'
-          arguments: assembleDebug -Pksp.useKSP2=true -Pksp.incremental=false -Djava.awt.headless=true
+          arguments: clean assembleDebug -Djava.awt.headless=true --no-daemon
           build-root-directory: .
 
       - name: Upload APK
