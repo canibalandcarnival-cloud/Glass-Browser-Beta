@@ -13,9 +13,16 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
-      # This version tells Gradle to look inside your "app" folder or project subfolders automatically
+      # This version forces a specific Gradle version so it doesn't look for the missing gradlew script
       - name: Build with Gradle
-        uses: gradle/gradle-build-action@v3
+        uses: gradle/actions/setup-gradle@v3
         with:
+          gradle-version: '8.5'
           arguments: assembleDebug
           build-root-directory: .
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: app-debug
+          path: app/build/outputs/apk/debug/app-debug.apk
